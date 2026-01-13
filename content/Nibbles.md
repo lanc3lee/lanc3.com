@@ -25,14 +25,21 @@ You can do ping test to check if that happened.
 - **Step 6:** PrivEsc (Sudo -l and Zip exploitation)
 
 
+## Hack Smarter
+
+for Apache httpd 2.4.18 ((Ubuntu)) identified in nmap scan, some beginners see an old Apache version and try to find a direct exploit 
+
+While `searchsploit` will show several vulnerabilities for Apache 2.4.18 
+(like **CVE-2016-5387 "httpoxy"** or various Denial of Service flaws), none of them lead to the **Remote Code Execution (RCE)** you need for this machine
+
+The concept to grasp here: "**Apache is the Door, not the Key**"
+- Apache is simply acting as the web server hosting the real target.
+    
+- **The Actual Target:** A blogging CMS called **Nibbleblog** (where the machine gets its name).
 
 
 
-### Why Nibbles is a "Level 2" Machine
 
-While **LAME** is about service vulnerabilities, **Nibbles** is about **Web Application** logic.
-
-1. **Web Footprinting:** Unlike LAME, where the vulnerability is right in the Nmap scan, Nibbles requires you to look at the **Source Code** of the webpage to find a hidden directory (`/nibbleblog/`).
     
 2. **Admin Bruteforce:** It often requires a very small amount of "password guessing" or using default credentials (`admin:nibbles`), which is a very realistic real-world scenario.
     
@@ -40,6 +47,8 @@ While **LAME** is about service vulnerabilities, **Nibbles** is about **Web Appl
     
 4. **Privilege Escalation (The "Boss Fight"):** In LAME, you get root for free. In Nibbles, you land as a user and have to find a **zip file** that you are allowed to run as sudo. It teaches you to "deconstruct" how a user has set up their folder permissions.
 
+
+## Details
 
 ┌──(lanc3㉿kali)-[~]
 └─$ ping 10.10.10.75    
@@ -76,14 +85,76 @@ Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
 
 
 
+browse to http://10.10.10.75:80
+
+![[nibble-hello-world.png|350]]
+view-source:http://10.10.10.75/
+
+![[nibble-view-source.png|380]]
+
+**Source Code** of webpage reveals a hidden directory (`/nibbleblog/`).
+
+![[nibbleblog-empty.png|380]]
+
+![[nibbleblog-viewsource.png]]
+
+viewing source doesn't review any nibbleblog version data. 
+
+Out of curiosity, i checked to see if any of the wordlists contain "nibbleblog" and found none
+
+┌──(lanc3㉿kali)-[~]
+└─$ cat /usr/share/wordlists/dirb/directory-list-2.3-big.txt | grep nibble    
+109nibble
+
+gobuster dir -u http://10.10.10.75 -w /usr/share/wordlists/dirb/common.txt
+will NOT reveal /nibbleblog directory 
+
 ## Hack Smarter
 
-for Apache httpd 2.4.18 ((Ubuntu)) identified in nmap scan, some beginners see an old Apache version and try to find a direct exploit 
+Nibble is specifically designed to "punish" pentesters who "spray and pray" with large wordlists without performing manual recon first.
 
-While `searchsploit` will show several vulnerabilities for Apache 2.4.18 
-(like **CVE-2016-5387 "httpoxy"** or various Denial of Service flaws), none of them lead to the **Remote Code Execution (RCE)** you need for this machine
+The directory name `nibbleblog` is not a "common" web folder (like `/admin`, `/login`, or `/dev`). It is the specific name of the CMS software. 
 
-The concept to grasp here: "**Apache is the Door, not the Key**"
-- Apache is simply acting as the web server hosting the real target.
+---
+
+### "Runbook" insight: Wordlists vs. Discovery
+
+vital lesson: **A larger wordlist is not always a better wordlist.**
+
+- **Small/Common Lists:** Catch the "low-hanging fruit" (standard configs).
     
-- **The Actual Target:** A blogging CMS called **Nibbleblog** (where the machine gets its name).
+- **Large/Medium Lists:** Catch generic software names, but take significantly longer.
+    
+- **Manual Recon:** Catches the "unique" identifiers (like `/nibbleblog/`) in seconds.
+    
+### Why `nibbleblog` is missing (from wordlists)
+
+Most wordlists are compiled from "crawling" the web and seeing which directory names appear most frequently. 
+While Nibbleblog is a real CMS, it isn't nearly as common as WordPress (`/wp-admin/`) or Joomla (`/administrator/`). Therefore, it doesn't make the cut for the "Top 5000" or even "Top 20,000" directories found in the standard lists.
+
+
+## gobuster sub-directories in nibbleblog
+while gobuster won't reveal nibbleblog, it will help find /admin (among others)
+
+when using gobuster , it's important to include flags **-x aspx,html,php,txt**
+example:
+**gobuster dir -u http://10.10.10.75/nibbleblog -w /usr/share/wordlists/dirb/common.txt --x aspx,html,php,txt**
+It would be a noob mistake to forget them and miss out crucial info. 
+
+
+here's an example where **-x aspx,html,php,txt** was not included
+
+![[gobuster-nibbleblog.png]]
+
+compare it to this version, which reveals a lot more, including the /admin.php login page
+
+![[nibble-gobuster-flags.png]]
+
+## Googling for " Nibble exploit " 
+reveals two exploit POC (proof of concept)
+first one is a python script
+https://github.com/dix0nym/CVE-2015-6967
+
+second one is a metasploit exploit, which I would test for learning purpose. 
+https://www.exploit-db.com/exploits/38489
+During OSCP exams, you can only use metasploit once, hence use it only as last resort. 
