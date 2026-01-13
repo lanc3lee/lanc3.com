@@ -1,20 +1,73 @@
 --- 
-title: LAME Walkthrough 
+title: LAME
 --- 
-# LAME
 
-LAME is the first OSCP-like box (in **Lainsunagi/TJnull** lists) for beginners
+
+LAME was the first OSCP-like box (in **Lainkusanagi/TJnull** lists) for beginners
+- while it is not included in 2026's lists to make room for newer challenges, it's still worth practising
 - first machine ever added to **Hack The Box**. 
   By completing it, you are participating in a "rite of passage" 
 - Most walkthroughs/tutorials use LAME as a baseline, meaning if you get stuck, there is a wealth of high-quality educational material to learn _why_ a certain step is taken.
 - **Metasploit vs. Manual Exploit:** It is a great machine to try the Metasploit version of an attack first, and then try the manual Python/Bash version to understand how it actually works.
   
 ### Teaches "Low Hanging Fruit" Principle
-  - LAME is famous for having multiple entry points
+  - LAME is famous for having multiple entry points, learn to prioritize easier ones and when to skip to next better target
   - teaches beginners to check service versions against known exploits 
     (`searchsploit` or Google) before trying to find manual "zero-day" bugs
 
- a ping test for simple reachability check before running nmap
+
+If you have practised with learning paths in PEN200, TryHackMe, HTB Academy etc, you could attempt this first box in **Lainkusanagi/TJnull** lists as a black box. 
+
+Pick Adventure Mode instead of Guided Mode
+![LAME Adventure Mode|300](assets/adventure-mode-hack-the-box.png)
+
+(i.e. don't read the tasks and hints as they are meant to guide beginners without experience)
+
+
+## Runbook
+1) nmap or rustscan to enumerate ports and services
+2) prioritize vulnerable services to check, identify low hanging fruits
+
+
+**Warning: Spoilers ahead. **
+
+Attempt LAME with a black-box approach first and read further only if you get stuck or pwned it. 
+
+
+
+## Overview
+
+nmap scan reveals open ports 21 (ftp), 22 (ssh), 139 & 445 (Samba) and 3632 (distcc)
+
+service OpenSSH 4.7p1 (Debian), it has no known RCE
+
+ftp vsftpd 2.3.4 seems to be the lowest hanging fruit but it's really a rabbit hole to teach us not to blindly follow version-based exploits. 
+
+ Samba smbd 3.0.20-Debian runs at port 139 & 445, which is vulnerable to exploit CVE-2007-2447
+ 
+ As this Samba service runs as root to handle file permissions and the **`username map script`** is triggered during the initial authentication phase, the resulting shell is **immediately root**.
+
+Most learners will stop this challenge after getting root access, eager to attempt more challenging boxes in **Lainsunagi/TJnull** lists.
+You can deep dive further (see below)
+
+## Hack Smarter
+- ftp vsftpd 2.3.4 presents itself as the easiest attack vector with exploit CVE-2011-2523 ('Smiley Face' backdoor), but it's a rabbit hole as the backdoor is simply not present. 
+  LAME predates the backdoor's release, and local firewall rules typically drop traffic on non-standard ports like 6200.  
+  This highlights the importance of **Contextual Analysis** over blindly following version-based exploits
+  
+  Nonetheless, in most CTFs, if you see vsftpd 2.3.4, it’s an instant win. 
+  Try triggering it anyway, and quickly move on to the more promising Samba vulnerability
+
+
+## Dive Deeper
+- study why exploit CVE-2011-2523 did not work for ftp vsftpd 2.3.4 
+- opportunity to learn how to gain a full interactive shell
+- **port 3632** is running **distcc** - LAME's "hidden gem" because beginners focus on the more famous Samba and FTP vulnerabilities.
+  Certainly a "unnecessarily" difficult route as you would need to privilege escalate as daemon user (after using distcc exploit) to gain access as root user
+
+## Details
+A ping test for simple reachability check before running nmap
+ping  <IP-of-target>
 
 nmap -sCV -v -p- -T4 <IP-of-target>
 
