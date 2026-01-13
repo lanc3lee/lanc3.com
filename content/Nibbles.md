@@ -20,7 +20,7 @@ You can do ping test to check if that happened.
     
 - **Step 4:** Exploit (File Upload)
     
-- **Step 5:** Stabilization (The Python PTY trick we discussed!)
+- **Step 5:** Stabilization (gaining full interactive shell)
     
 - **Step 6:** PrivEsc (Sudo -l and Zip exploitation)
 
@@ -35,17 +35,14 @@ While `searchsploit` will show several vulnerabilities for Apache 2.4.18
 The concept to grasp here: "**Apache is the Door, not the Key**"
 - Apache is simply acting as the web server hosting the real target.
     
-- **The Actual Target:** A blogging CMS called **Nibbleblog** (where the machine gets its name).
-
-
-
-
+- **Actual Target:** A blogging CMS called **Nibbleblog** (where the machine gets its name).
+  
+- **Admin Bruteforce:** It often requires a very small amount of "password guessing" or using default credentials (`admin:nibbles`), which is a very realistic real-world scenario.
     
-2. **Admin Bruteforce:** It often requires a very small amount of "password guessing" or using default credentials (`admin:nibbles`), which is a very realistic real-world scenario.
+3. **Arbitrary File Upload:** Gain access by uploading a malicious PHP shell disguised as a plugin image. This is a "Gold Standard" pentesting skill.
     
-3. **Arbitrary File Upload:** You gain access by uploading a malicious PHP shell disguised as a plugin image. This is a "Gold Standard" pentesting skill.
-    
-4. **Privilege Escalation (The "Boss Fight"):** In LAME, you get root for free. In Nibbles, you land as a user and have to find a **zip file** that you are allowed to run as sudo. It teaches you to "deconstruct" how a user has set up their folder permissions.
+4. **Privilege Escalation:** access as a user and find a **zip file** to run as sudo. 
+   It teaches us to "deconstruct" how a user has set up their folder permissions.
 
 
 ## Details
@@ -113,11 +110,8 @@ will NOT reveal /nibbleblog directory
 
 Nibble is specifically designed to "punish" pentesters who "spray and pray" with large wordlists without performing manual recon first.
 
-The directory name `nibbleblog` is not a "common" web folder (like `/admin`, `/login`, or `/dev`). It is the specific name of the CMS software. 
-
----
-
-### "Runbook" insight: Wordlists vs. Discovery
+The directory name `nibbleblog` is not a "common" web folder (like `/admin`, `/login`, or `/dev`). 
+It is the specific name of the CMS software. 
 
 vital lesson: **A larger wordlist is not always a better wordlist.**
 
@@ -126,17 +120,22 @@ vital lesson: **A larger wordlist is not always a better wordlist.**
 - **Large/Medium Lists:** Catch generic software names, but take significantly longer.
     
 - **Manual Recon:** Catches the "unique" identifiers (like `/nibbleblog/`) in seconds.
-    
+
+
+
 ### Why `nibbleblog` is missing (from wordlists)
 
 Most wordlists are compiled from "crawling" the web and seeing which directory names appear most frequently. 
-While Nibbleblog is a real CMS, it isn't nearly as common as WordPress (`/wp-admin/`) or Joomla (`/administrator/`). Therefore, it doesn't make the cut for the "Top 5000" or even "Top 20,000" directories found in the standard lists.
+While Nibbleblog is a real CMS, it isn't nearly as common as WordPress (`/wp-admin/`) or Joomla (`/administrator/`). 
+
+Therefore, it is not included in "Top 5000" or even "Top 20,000" directories found in the standard lists.
 
 
 ## gobuster sub-directories in nibbleblog
 while gobuster won't reveal nibbleblog, it will help find /admin (among others)
 
 when using gobuster , it's important to include flags **-x aspx,html,php,txt**
+
 example:
 **gobuster dir -u http://10.10.10.75/nibbleblog -w /usr/share/wordlists/dirb/common.txt --x aspx,html,php,txt**
 It would be a noob mistake to forget them and miss out crucial info. 
@@ -150,6 +149,23 @@ compare it to this version, which reveals a lot more, including the /admin.php l
 
 ![[nibble-gobuster-flags.png]]
 
+
+## High value directories/files identified 
+
+/admin                (Status: 301) [Size: 321] [--> http://10.10.10.75/nibbleblog/admin/]
+/admin.php            (Status: 200) [Size: 1401]
+/content              (Status: 301) [Size: 323] [--> http://10.10.10.75/nibbleblog/content/]
+/feed.php             (Status: 200) [Size: 302]
+/index.php            (Status: 200) [Size: 2987]
+/plugins              (Status: 301) [Size: 323] [--> http://10.10.10.75/nibbleblog/plugins/]
+/update.php           (Status: 200) [Size: 1622]
+
+
+![[Screenshot 2026-01-13 at 3.15.45 PM.png|300]]
+
+![[Screenshot 2026-01-13 at 2.56.44 PM.png|300]]
+
+![[Screenshot 2026-01-13 at 2.57.30 PM.png|300]]
 ## Googling for " Nibble exploit " 
 reveals two exploit POC (proof of concept)
 first one is a python script
@@ -157,4 +173,6 @@ https://github.com/dix0nym/CVE-2015-6967
 
 second one is a metasploit exploit, which I would test for learning purpose. 
 https://www.exploit-db.com/exploits/38489
+
 During OSCP exams, you can only use metasploit once, hence use it only as last resort. 
+
