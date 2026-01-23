@@ -37,3 +37,42 @@ Further Reading:
 https://www.reddit.com/r/Pentesting/comments/1qbna2n/nmap_vs_rustscan_vs_masscan_which_one_is_better/
 
 https://medium.com/@2s1one/nmap-vs-masscan-vs-rustscan-myths-and-facts-62a9b462241e
+
+-----------
+
+installing and running Rustscan was tedious. 
+
+couldn't use aptget and hard to install & run it via cargo
+
+~/.cargo/bin/rustscan --version
+rustscan 2.4.1
+
+
+### 1. Fix the "Command Not Found" Permanently
+
+To make Kali recognize `rustscan` every time you open a terminal, add its folder to your shell's search path:
+
+1. **Add to Zsh (Default Kali Shell):**
+    
+    Bash
+    
+    ```
+    echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> ~/.zshrc
+    ```
+    
+2. **Refresh your current terminal:**
+    
+    Bash
+    
+    ```
+    source ~/.zshrc
+    ```
+
+~/.cargo/bin/rustscan --version
+rustscan 2.4.1
+                                                                                                                                                         
+┌──(lanc3㉿kali)-[~]
+└─$ echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> ~/.zshrc
+                                                                                                                                                         
+┌──(lanc3㉿kali)-[~]
+└─$ source ~/.zshrc

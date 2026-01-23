@@ -40,3 +40,7 @@ Back in the shell, run these two commands to get colors and full-screen support:
 export TERM=xterm-256color
 export SHELL=bash
 ```
+
+--------
+
+if pkexec found suid, pwnkit will usually work
