@@ -44,3 +44,10 @@ export SHELL=bash
 --------
 
 if pkexec found suid, pwnkit will usually work
+
+---------
+being running linpeas, try
+
+sudo -l
+
+

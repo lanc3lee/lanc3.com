@@ -38,17 +38,8 @@ Web servers often respond with "200 OK" for everything, or provide "403 Forbidde
 
 ### 3. Common Use Case Scenarios
 
-#### **A. Subdomain Brute Forcing**
 
-When attacking a target, you often want to find hidden subdomains (like `dev.target.com` or `api.target.com`).
-
-Bash
-
-```
-ffuf -u http://FUZZ.target.com -w /usr/share/wordlists/seclists/Discovery/DNS/subdomains-top1million-5000.txt
-```
-
-#### **B. Recursive Scanning**
+#### **A. Recursive Scanning**
 
 While `feroxbuster` does this by default, you can make `ffuf` recursive with the `-recursion` flag. It will find a directory and then start fuzzing inside it.
 
@@ -58,7 +49,7 @@ Bash
 ffuf -u http://10.10.10.10/FUZZ -w wordlist.txt -recursion -recursion-depth 2
 ```
 
-#### **C. POST Data Fuzzing**
+#### **B. POST Data Fuzzing**
 
 If you are testing a login form for common usernames:
 
@@ -67,6 +58,18 @@ Bash
 ```
 ffuf -u http://target.com/login.php -X POST -d "username=FUZZ&password=password123" -w usernames.txt
 ```
+
+
+#### **C. Subdomain Brute Forcing**
+
+When attacking a target, you often want to find hidden subdomains (like `dev.target.com` or `api.target.com`).
+
+Bash
+
+```
+ffuf -u http://FUZZ.target.com -w `/usr/share/seclists/Discovery/DNS/bitquark-subdomains-top100000.txt`
+```
+
 
 ---
 
