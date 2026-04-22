@@ -1,4 +1,6 @@
 
+LFI to RCE: https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/File%20Inclusion/LFI-to-RCE.md
+
 Local File Inclusion (LFI) is a web vulnerability that allows an attacker to trick a web application into exposing or running files on the server that were never intended to be accessible.
 
 It usually occurs when an application takes user-supplied input (like a filename or a path) and passes it to a file-processing function (like `include` in PHP or `fs.readFile` in Node.js) without properly sanitizing it
@@ -74,3 +76,22 @@ Valentine (HackTheBox - Retired)
 --------
 
 oisoning (manipulation of traffic packets) is not allowed in the exam. However, based on this scenario - justifying this to be LFI would suffice. Read more here: [https://shahjerry33.medium.com/rce-via-lfi-log-poisoning-the-death-potion-c0831cebc16d](https://shahjerry33.medium.com/rce-via-lfi-log-poisoning-the-death-potion-c0831cebc16d "https://shahjerry33.medium.com/rce-via-lfi-log-poisoning-the-death-potion-c0831cebc16d")
+
+
+
+
+
+--------
+
+**Log Poisoning is absolutely in scope** for the OSCP exam.
+
+While OffSec bans "Network Poisoning" tools like **Responder** (LLMNR/NBT-NS poisoning), **Log Poisoning** is a web-based exploitation technique that falls directly under the **"Local File Inclusion (LFI) to Remote Code Execution"** module in the official PEN-200 syllabus.
+
+### Why the confusion exists
+
+There are two different things often called "poisoning" in cybersecurity:
+
+| **Attack Type**       | **Technique**                                                | **OSCP Status**       |
+| --------------------- | ------------------------------------------------------------ | --------------------- |
+| **Network Poisoning** | Spoofing traffic using Responder/ARP.                        | **BANNED** (for Exam) |
+| **Log Poisoning**     | Injecting PHP code into a file (like `access.log`) via HTTP. | **IN SCOPE** (Legal)  |

@@ -21,5 +21,7 @@ Join me along as I develop my runbooks to be documented here
 
 My 90-lab OSCP lab access ended today (12 Jan 2026) & I scheduled my exam on 5 May. 
 In next 100+ days, I would tackle > 130+ boxes listed in Lainsunagi's list, developing runbooks along the way. 
+[https://docs.google.com/spreadsheets/d/18weuz_Eeynr6sXFQ87Cd5F0slOj9Z6rt/htmlview](https://docs.google.com/spreadsheets/d/18weuz_Eeynr6sXFQ87Cd5F0slOj9Z6rt/htmlview "https://docs.google.com/spreadsheets/d/18weuz_Eeynr6sXFQ87Cd5F0slOj9Z6rt/htmlview")
+
 
 

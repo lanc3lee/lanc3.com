@@ -48,6 +48,8 @@ ftp vsftpd 2.3.4 seems to be the lowest hanging fruit but it's really a rabbit h
  As this Samba service runs as root to handle file permissions and the **`username map script`** is triggered during the initial authentication phase, the resulting shell is **immediately root**.
 
 Most learners will stop this challenge after getting root access, eager to attempt more challenging boxes in **Lainsunagi/TJnull** lists.
+[https://docs.google.com/spreadsheets/d/18weuz_Eeynr6sXFQ87Cd5F0slOj9Z6rt/htmlview](https://docs.google.com/spreadsheets/d/18weuz_Eeynr6sXFQ87Cd5F0slOj9Z6rt/htmlview "https://docs.google.com/spreadsheets/d/18weuz_Eeynr6sXFQ87Cd5F0slOj9Z6rt/htmlview")
+
 You can deep dive further (see below)
 
 ## Hack Smarter

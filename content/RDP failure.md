@@ -1,0 +1,2 @@
+
+if RDP is failing but you have valid credentials, **Evil-WinRM** is almost always the better choice. It gives you a PowerShell terminal directly. It’s faster, more stable, and doesn't care about `$DISPLAY` or X11

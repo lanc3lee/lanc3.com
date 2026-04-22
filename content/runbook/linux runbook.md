@@ -51,3 +51,17 @@ being running linpeas, try
 sudo -l
 
 
+-------
+
+GTFOBins
+
+sudo sudo /bin/sh
+
+configuration `(ALL) ALL` means user has been granted **full administrative privileges** over the entire system.
+
+- **The First `(ALL)`:** You can act as **any user** (root, www-data, etc.).
+    
+- **The Second `ALL`:** You can run **any command** on the system.
+    
+
+When running `sudo /bin/sh`, the system checked the `/etc/sudoers` file, saw that user is allowed to run "ALL" commands, and executed the shell (`/bin/sh`) with root permissions.

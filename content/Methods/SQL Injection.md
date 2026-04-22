@@ -1,4 +1,6 @@
 
+Resource for SQLi parameters for different database types
+https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/SQL%20Injection
 
 For login pages, steps to try
 

