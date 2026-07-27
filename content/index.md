@@ -3,6 +3,8 @@ title: OSCP & Beyond
 ---
 ### Designing, Building & Defending Digital Infrastructure 
 
+
+![](https://www.youtube.com/watch?v=HT3l_uIsRuI)
 [Building a Cyber Range Where Your Own Defenses Get Hacked](https://www.youtube.com/watch?v=HT3l_uIsRuI) 
 
 
