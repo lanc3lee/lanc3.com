@@ -139,3 +139,5 @@ Starting gobuster in directory enumeration mode
 Progress: 32291 / 32291 (100.00%)
 
 ```
+
+gobuster dir -u http://10.129.234.73 -w /usr/share/wordlists/dirb/common.txt -x php,html,txt,xml,zip,config

@@ -140,3 +140,90 @@ hint: need to edit /etc/hosts
 
 otherwise will have errors
 
+-------
+
+When you run `nxc ldap <IP> -u <user> -p <pass> --trusted-for-delegation`, you are essentially auditing the Active Directory environment for a specific, dangerous configuration known as **Unconstrained Delegation**.
+
+### What you see in the output
+
+If the tool identifies accounts or computers with this setting, the output will list the **sAMAccountName** and/or **distinguishedName** of the objects where the `TRUSTED_FOR_DELEGATION` flag is set to `True` in their `userAccountControl` attribute.
+
+You will typically see a list formatted like this:
+
+```
+[*] Enumerated users/computers trusted for delegation:
+[+] <AccountName>
+[+] <ComputerName>$
+
+```
+
+### Why this is an attack vector
+
+When an account (usually a machine account or a service account) has this flag enabled, it performs **Unconstrained Delegation**. 
+This is a legacy Kerberos feature that presents a massive security risk:
+
+1. **The "TGT Forwarding" Mechanism:** When a user authenticates to a service (like a web server or file share) that is "Trusted for Delegation," the Domain Controller includes the user's **Ticket Granting Ticket (TGT)** inside the service ticket sent to that host.
+    
+2. **Credential Exposure:** The target server decrypts the TGT and stores it in its memory (LSASS).
+    
+3. **The Payoff:** If you (as an attacker) compromise that specific server, you can dump the memory of the LSASS process and extract the TGTs of **any user** who has connected to that server.
+    
+4. **Impersonation:** With a harvested TGT, you can impersonate that user to _any other service_ in the domain, effectively bypassing authentication. If a Domain Administrator connects to that compromised server, you effectively own the entire domain.
+
+- **The "Coerced Authentication" Connection:** You will often find that you cannot "force" a high-privilege user to connect to your compromised machine. However, if you find a machine that is `TRUSTED_FOR_DELEGATION`, you now have a "bridge." You can then use techniques like the **Printer Bug** (or other coercion methods) to force a Domain Controller or a high-privilege service account to authenticate to that machine.
+    
+- **The Outcome:** Once they authenticate, their TGT is sitting in the memory of the "delegation-trusted" machine you’ve already compromised. You can then use tools like `Mimikatz` or `Rubeus` on that machine to extract the TGT and elevate your access.
+
+Workflow:
+
+- **If it's a Computer:** It is a prime candidate for lateral movement via coercion.
+
+- **If it's a User:** This account is a "golden ticket" if compromised, because it essentially functions as a proxy that can be used to harvest credentials of anyone who interacts with it.
+    
+
+**Quick tip:** If you find a machine with this flag, check if you can use it to "bridge" your access from a low-privileged segment to a high-privileged segment using techniques like `PrintNightmare` or simple SMB connections to trigger the authentication.
+
+----
+
+what does this tell us?
+
+```
+nxc ldap 10.129.232.88 -u 'j.fleischman' -p 'J0elTHEM4n1990!' --trusted-for-delegation 
+
+LDAP        10.129.232.88   389    DC01             [*] Windows 10 / Server 2019 Build 17763 (name:DC01) (domain:fluffy.htb)
+
+LDAP        10.129.232.88   389    DC01             [+] fluffy.htb\j.fleischman:J0elTHEM4n1990! 
+
+LDAP        10.129.232.88   389    DC01             DC01$
+```
+This output tells us that **`DC01$` (the Domain Controller's computer account) is configured with "Unconstrained Delegation"** in the `fluffy.htb` domain.
+
+When you run `nxc` with the `--trusted-for-delegation` flag, it queries the `userAccountControl` attribute of objects in Active Directory. Specifically, it is looking for the `ADS_UF_TRUSTED_FOR_DELEGATION` flag.
+
+
+1. Since the Domain Controller itself is trusted for unconstrained delegation, if you can coerce an account with higher privileges (like a Domain Admin) to authenticate to this DC for a service (like SMB, LDAP, or RPC), that user's TGT will be cached in the DC's memory.
+    
+2. **High-Risk Exposure:** Because this is the Domain Controller, _every_ service on this machine is inherently high-value. If you compromise this host, you effectively have the ability to intercept the credentials of any domain user who happens to connect to it.
+    
+
+ finding unconstrained delegation on a Domain Controller is an "instant win" condition if you can trigger the right authentication.
+
+- **The Workflow:** You don't need to "hack" the DC yet. You need to "trick" a privileged user into connecting to it.
+    
+- **Common Techniques:** * **Printer Bug / PetitPotam:** If the DC has the Print Spooler service enabled, you can force it to connect to an attacker-controlled machine (or another machine you control) using `dcom` or other RPC methods.
+    
+    - **Spooler Service:** Even if the DC is the one being delegated to, you are looking to capture the TGT of an admin who connects to services on the DC.
+        
+
+### Important Distinction
+
+Note that `nxc` returned `DC01$`. This confirms it is the **Computer Account** that is trusted. This is common in some lab environments or misconfigured enterprise environments, but it is extremely dangerous.
+
+next steps:
+
+1. **Map the services:** Check what services are running on `DC01` (use `nxc smb 10.129.232.88 -u ... -p ... --shares` or `--sessions`).
+    
+2. **Check for Coercion:** Verify if the `MS-RPRN` (Print Spooler) interface is available, as that is the most common way to trigger the delegation capture.
+    
+3. **Document the Finding:** In report, this is a "High/Critical" finding. Identified a configuration that allows for full domain compromise via TGT harvesting.
+------

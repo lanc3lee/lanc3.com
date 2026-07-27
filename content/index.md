@@ -1,7 +1,15 @@
 ---
 title: OSCP & Beyond
 ---
-# Key to pass OSCP & excel in cybersecurity
+### Designing, Building & Defending Digital Infrastructure 
+
+[Building a Cyber Range Where Your Own Defenses Get Hacked](https://www.youtube.com/watch?v=HT3l_uIsRuI) 
+
+
+
+-------
+
+Key to pass OSCP & excel in cybersecurity
 is to keep developing your own runbooks (or field manuals for various scenarios during your engagements)
 
 With many popular OSCP & CPTS cheatsheets, why bother?
@@ -19,8 +27,7 @@ Hack Smarter. Dive Deeper
 
 Join me along as I develop my runbooks to be documented here
 
-My 90-lab OSCP lab access ended today (12 Jan 2026) & I scheduled my exam on 5 May. 
-In next 100+ days, I would tackle > 130+ boxes listed in Lainsunagi's list, developing runbooks along the way. 
+Working on Lainsunagi's list for OSCP, developing runbooks along the way. 
 [https://docs.google.com/spreadsheets/d/18weuz_Eeynr6sXFQ87Cd5F0slOj9Z6rt/htmlview](https://docs.google.com/spreadsheets/d/18weuz_Eeynr6sXFQ87Cd5F0slOj9Z6rt/htmlview "https://docs.google.com/spreadsheets/d/18weuz_Eeynr6sXFQ87Cd5F0slOj9Z6rt/htmlview")
 
 
